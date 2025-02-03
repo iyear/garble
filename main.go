@@ -283,7 +283,11 @@ func main() {
 	}
 
 	if flagLiteralsExclude != "" {
-		literalsExclude = strings.Split(flagLiteralsExclude, ",")
+		for _, e := range strings.Split(flagLiteralsExclude, ",") {
+			if s := strings.TrimSpace(e); s != "" {
+				literalsExclude = append(literalsExclude, s)
+			}
+		}
 	}
 
 	if err := mainErr(args); err != nil {
