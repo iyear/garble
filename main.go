@@ -54,11 +54,13 @@ import (
 var flagSet = flag.NewFlagSet("garble", flag.ExitOnError)
 
 var (
-	flagLiterals bool
-	flagTiny     bool
-	flagDebug    bool
-	flagDebugDir string
-	flagSeed     seedFlag
+	flagLiterals        bool
+	flagLiteralsInclude string
+	flagLiteralsExclude string
+	flagTiny            bool
+	flagDebug           bool
+	flagDebugDir        string
+	flagSeed            seedFlag
 	// TODO(pagran): in the future, when control flow obfuscation will be stable migrate to flag
 	flagControlFlow = os.Getenv("GARBLE_EXPERIMENTAL_CONTROLFLOW") == "1"
 )
@@ -66,13 +68,14 @@ var (
 func init() {
 	flagSet.Usage = usage
 	flagSet.BoolVar(&flagLiterals, "literals", false, "Obfuscate literals such as strings")
+	flagSet.StringVar(&flagLiteralsExclude, "literals-exclude", "", "Comma-separated list of package import path prefixes to exclude from -literals")
 	flagSet.BoolVar(&flagTiny, "tiny", false, "Optimize for binary size, losing some ability to reverse the process")
 	flagSet.BoolVar(&flagDebug, "debug", false, "Print debug logs to stderr")
 	flagSet.StringVar(&flagDebugDir, "debugdir", "", "Write the obfuscated source to a directory, e.g. -debugdir=out")
 	flagSet.Var(&flagSeed, "seed", "Provide a base64-encoded seed, e.g. -seed=o9WDTZ4CN4w\nFor a random seed, provide -seed=random")
 }
 
-var rxGarbleFlag = regexp.MustCompile(`-(?:literals|tiny|debug|debugdir|seed)(?:$|=)`)
+var rxGarbleFlag = regexp.MustCompile(`-(?:literals|literals-include|literals-exclude|tiny|debug|debugdir|seed)(?:$|=)`)
 
 type seedFlag struct {
 	random bool
@@ -217,6 +220,8 @@ func debugSince(start time.Time) time.Duration {
 	return time.Since(start).Truncate(10 * time.Microsecond)
 }
 
+var literalsExclude []string
+
 func main() {
 	if dir := os.Getenv("GARBLE_WRITE_CPUPROFILES"); dir != "" {
 		f, err := os.CreateTemp(dir, "garble-cpu-*.pprof")
@@ -276,6 +281,11 @@ func main() {
 	if flagSeed.random {
 		fmt.Fprintf(os.Stderr, "-seed chosen at random: %s\n", base64.RawStdEncoding.EncodeToString(flagSeed.bytes))
 	}
+
+	if flagLiteralsExclude != "" {
+		literalsExclude = strings.Split(flagLiteralsExclude, ",")
+	}
+
 	if err := mainErr(args); err != nil {
 		if code, ok := err.(errJustExit); ok {
 			os.Exit(int(code))
@@ -1822,11 +1832,21 @@ func (tf *transformer) transformGoFile(file *ast.File) *ast.File {
 	// We can't obfuscate literals in the runtime and its dependencies,
 	// because obfuscated literals sometimes escape to heap,
 	// and that's not allowed in the runtime itself.
-	if flagLiterals && tf.curPkg.ToObfuscate {
-		file = literals.Obfuscate(tf.obfRand, file, tf.info, tf.linkerVariableStrings)
+	if flagLiterals && tf.curPkg.ToObfuscate && !tf.curPkg.Standard {
+		shouldObfuscate := true
+		for _, prefix := range literalsExclude {
+			if strings.HasPrefix(tf.curPkg.ImportPath, prefix) {
+				shouldObfuscate = false
+				break
+			}
+		}
 
-		// some imported constants might not be needed anymore, remove unnecessary imports
-		tf.useAllImports(file)
+		if shouldObfuscate {
+			file = literals.Obfuscate(tf.obfRand, file, tf.info, tf.linkerVariableStrings)
+
+			// some imported constants might not be needed anymore, remove unnecessary imports
+			tf.useAllImports(file)
+		}
 	}
 
 	pre := func(cursor *astutil.Cursor) bool {

@@ -23,8 +23,8 @@ var (
 		simpleObfuscator,
 		swap{},
 		split{},
-		shuffle{},
-		seed{},
+		// shuffle{}, disabled due to binary size increase
+		// seed{},
 	}
 
 	// LinearTimeObfuscators contains all types which implement the obfuscator Interface and can safely be used on large literals
