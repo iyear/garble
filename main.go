@@ -41,14 +41,14 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/iyear/garble/internal/ctrlflow"
 	"github.com/rogpeppe/go-internal/cache"
 	"golang.org/x/mod/module"
 	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/ssa"
-	"mvdan.cc/garble/internal/ctrlflow"
 
-	"mvdan.cc/garble/internal/linker"
-	"mvdan.cc/garble/internal/literals"
+	"github.com/iyear/garble/internal/linker"
+	"github.com/iyear/garble/internal/literals"
 )
 
 var flagSet = flag.NewFlagSet("garble", flag.ExitOnError)

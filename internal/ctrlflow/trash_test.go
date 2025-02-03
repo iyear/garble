@@ -13,10 +13,10 @@ import (
 	"testing"
 
 	"github.com/go-quicktest/qt"
+	ah "github.com/iyear/garble/internal/asthelper"
 	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/ssa"
 	"golang.org/x/tools/go/ssa/ssautil"
-	ah "mvdan.cc/garble/internal/asthelper"
 )
 
 // Test_generateTrashBlock tests correctness of generated trash code by generating and compiling a large number of statements

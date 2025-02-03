@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	ah "github.com/iyear/garble/internal/asthelper"
 	"golang.org/x/tools/go/ssa"
-	ah "mvdan.cc/garble/internal/asthelper"
 )
 
 var (

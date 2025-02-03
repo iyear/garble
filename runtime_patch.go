@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	ah "mvdan.cc/garble/internal/asthelper"
+	ah "github.com/iyear/garble/internal/asthelper"
 )
 
 // updateMagicValue updates hardcoded value of hdr.magic

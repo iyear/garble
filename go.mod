@@ -1,4 +1,4 @@
-module mvdan.cc/garble
+module github.com/iyear/garble
 
 // Before the .5 bugfix release, alias tracking via go/types
 // was broken; see https://go.dev/issue/70517.
