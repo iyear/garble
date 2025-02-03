@@ -129,10 +129,6 @@ func appendFlags(w io.Writer, forBuildHash bool) {
 	if flagLiterals {
 		io.WriteString(w, " -literals")
 	}
-	if flagLiteralsExclude != "" {
-		io.WriteString(w, " -literals-exclude=")
-		io.WriteString(w, flagLiteralsExclude)
-	}
 	if flagTiny {
 		io.WriteString(w, " -tiny")
 	}

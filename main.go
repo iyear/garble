@@ -54,13 +54,11 @@ import (
 var flagSet = flag.NewFlagSet("garble", flag.ExitOnError)
 
 var (
-	flagLiterals        bool
-	flagLiteralsInclude string
-	flagLiteralsExclude string
-	flagTiny            bool
-	flagDebug           bool
-	flagDebugDir        string
-	flagSeed            seedFlag
+	flagLiterals bool
+	flagTiny     bool
+	flagDebug    bool
+	flagDebugDir string
+	flagSeed     seedFlag
 	// TODO(pagran): in the future, when control flow obfuscation will be stable migrate to flag
 	flagControlFlow = os.Getenv("GARBLE_EXPERIMENTAL_CONTROLFLOW") == "1"
 )
@@ -68,14 +66,13 @@ var (
 func init() {
 	flagSet.Usage = usage
 	flagSet.BoolVar(&flagLiterals, "literals", false, "Obfuscate literals such as strings")
-	flagSet.StringVar(&flagLiteralsExclude, "literals-exclude", "", "Comma-separated list of package import path prefixes to exclude from -literals")
 	flagSet.BoolVar(&flagTiny, "tiny", false, "Optimize for binary size, losing some ability to reverse the process")
 	flagSet.BoolVar(&flagDebug, "debug", false, "Print debug logs to stderr")
 	flagSet.StringVar(&flagDebugDir, "debugdir", "", "Write the obfuscated source to a directory, e.g. -debugdir=out")
 	flagSet.Var(&flagSeed, "seed", "Provide a base64-encoded seed, e.g. -seed=o9WDTZ4CN4w\nFor a random seed, provide -seed=random")
 }
 
-var rxGarbleFlag = regexp.MustCompile(`-(?:literals|literals-include|literals-exclude|tiny|debug|debugdir|seed)(?:$|=)`)
+var rxGarbleFlag = regexp.MustCompile(`-(?:literals|tiny|debug|debugdir|seed)(?:$|=)`)
 
 type seedFlag struct {
 	random bool
@@ -282,12 +279,18 @@ func main() {
 		fmt.Fprintf(os.Stderr, "-seed chosen at random: %s\n", base64.RawStdEncoding.EncodeToString(flagSeed.bytes))
 	}
 
-	if flagLiteralsExclude != "" {
-		for _, e := range strings.Split(flagLiteralsExclude, ",") {
+	// pass the literals exclude list via env
+	if exclude := os.Getenv("GARBLE_LITERALS_EXCLUDE"); exclude != "" {
+		for _, e := range strings.Split(exclude, ",") {
 			if s := strings.TrimSpace(e); s != "" {
 				literalsExclude = append(literalsExclude, s)
 			}
 		}
+	}
+
+	// if the flag is set, override the env
+	if !flagLiterals && len(os.Getenv("GARBLE_LITERALS")) > 0 {
+		flagLiterals = true
 	}
 
 	if err := mainErr(args); err != nil {
