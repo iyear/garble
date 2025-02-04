@@ -280,7 +280,7 @@ func main() {
 	}
 
 	// pass the literals exclude list via env
-	if exclude := os.Getenv("GARBLE_LITERALS_EXCLUDE"); exclude != "" {
+	if exclude := os.Getenv("GOGARBLE_LITERALS_EXCLUDE"); exclude != "" {
 		for _, e := range strings.Split(exclude, ",") {
 			if s := strings.TrimSpace(e); s != "" {
 				literalsExclude = append(literalsExclude, s)
@@ -288,8 +288,7 @@ func main() {
 		}
 	}
 
-	// if the flag is set, override the env
-	if !flagLiterals && len(os.Getenv("GARBLE_LITERALS")) > 0 {
+	if len(os.Getenv("GOGARBLE_LITERALS")) > 0 {
 		flagLiterals = true
 	}
 
